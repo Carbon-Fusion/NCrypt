@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
+  bool _shouldEncrypt = false;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -33,24 +34,36 @@ class _HomeScreenState extends State<HomeScreen> {
       onPressed: () {
         setState(() {
           _isLoading = true;
+          _shouldEncrypt = true;
         });
-        FilePicker.platform
-            .pickFiles(allowMultiple: false)
-            .then((FilePickerResult? value) async {
-          if (value != null) {
-            await Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => FileEncryptPage(
-                      pickedFile: value,
-                    )));
-          }
-        }).whenComplete(() => {
-                  setState(() {
-                    _isLoading = false;
-                  })
-                });
+        encryptDecryptButton();
       },
       icon: const Icon(Icons.enhanced_encryption_rounded));
 
   Widget decryptFile() => IconButton(
-      onPressed: () => {}, icon: const Icon(Icons.clear_all_rounded));
+      onPressed: () {
+        setState(() {
+          _isLoading = true;
+          _shouldEncrypt = false;
+        });
+        encryptDecryptButton();
+      },
+      icon: const Icon(Icons.clear_all_rounded));
+  void encryptDecryptButton() async {
+    FilePicker.platform
+        .pickFiles(allowMultiple: false)
+        .then((FilePickerResult? value) async {
+      if (value != null) {
+        await Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => FileEncryptPage(
+                  pickedFile: value,
+                  shouldEncrypt: _shouldEncrypt,
+                )));
+      }
+    }).whenComplete(() => {
+              setState(() {
+                _isLoading = false;
+              })
+            });
+  }
 }
