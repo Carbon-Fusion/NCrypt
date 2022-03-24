@@ -1,4 +1,5 @@
 import 'package:encryptF/pages/file_encrypt_page.dart';
+import 'package:encryptF/widgets/loading_widget.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -20,36 +21,51 @@ class _HomeScreenState extends State<HomeScreen> {
           title: const Text("Encrypt!"),
         ),
         body: _isLoading
-            ? const Text("Loading..")
+            ? const Center(
+                child: LoadingWidget(),
+              )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
-                children: [encryptFile(), decryptFile()],
+                children: [
+                  logo(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [encryptFileButton(), decryptFileButton()],
+                  )
+                ],
               ),
       ),
     );
   }
 
-  Widget encryptFile() => IconButton(
-      onPressed: () {
-        setState(() {
-          _isLoading = true;
-          _shouldEncrypt = true;
-        });
-        encryptDecryptButton();
-      },
-      icon: const Icon(Icons.enhanced_encryption_rounded));
+  Widget logo() => Image.asset('assets/logo.webp');
+  Widget encryptFileButton() => ElevatedButton.icon(
+        onPressed: () {
+          setState(() {
+            _isLoading = true;
+            _shouldEncrypt = true;
+          });
+          encryptDecryptFile();
+        },
+        icon: const Icon(Icons.enhanced_encryption_rounded),
+        label: const Text(
+          'Encrypt',
+          style: TextStyle(fontSize: 25),
+        ),
+      );
 
-  Widget decryptFile() => IconButton(
+  Widget decryptFileButton() => ElevatedButton.icon(
       onPressed: () {
         setState(() {
           _isLoading = true;
           _shouldEncrypt = false;
         });
-        encryptDecryptButton();
+        encryptDecryptFile();
       },
-      icon: const Icon(Icons.clear_all_rounded));
-  void encryptDecryptButton() async {
+      icon: const Icon(Icons.lock_open_rounded),
+      label: const Text('Decrypt', style: TextStyle(fontSize: 25)));
+  void encryptDecryptFile() async {
     FilePicker.platform
         .pickFiles(allowMultiple: false)
         .then((FilePickerResult? value) async {

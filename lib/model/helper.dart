@@ -14,12 +14,12 @@ class Helper {
       return false;
     }
   }
-  Future<File> saveFile(String file) async {
+  Future<File> saveFile(String src) async {
     Directory? appStorage = await getExternalStorageDirectory();
-    var fileName = (file.split('/').last);
+    var fileName = (src.split('/').last);
     final newFile = ('${appStorage!.path}/$fileName');
 
-    return File(file).copy(newFile);
+    return File(src).copySync(newFile);
   }
 
 }
