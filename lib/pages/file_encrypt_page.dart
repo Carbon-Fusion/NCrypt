@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'dart:ui';
+
 import 'package:aes_crypt_null_safe/aes_crypt_null_safe.dart';
-import 'package:encryptF/model/helper.dart';
+import 'package:encryptF/helpers/compression_helper.dart';
+import 'package:encryptF/helpers/encrypt_helper.dart';
 import 'package:encryptF/pages/landing_page.dart';
 import 'package:encryptF/widgets/loading_widget.dart';
 import 'package:file_icon/file_icon.dart';
@@ -7,7 +11,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:filesize/filesize.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import '../helpers/misc_helper.dart';
 
 class FileEncryptPage extends StatefulWidget {
   final FilePickerResult pickedFile;
@@ -25,11 +33,17 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
   bool _isLoading = false;
   bool _isPasswordHidden = false;
   String _currStatus = "...";
-  final _goldColor = const Color.fromRGBO(255, 223, 54, 0.5);
-  final _formKey = GlobalKey<FormState>();
+  String _resultName = "NCrypt";
+  late AesCrypt fileCrypt;
+  // final _goldColor = const Color.fromRGBO(255, 223, 54, 0.5);
+  final _passwordFormKey = GlobalKey<FormState>();
+  final _resultNameFormKey = GlobalKey<FormState>();
   final passwordFieldController = TextEditingController();
+  final resultNameFieldController = TextEditingController();
+  final log = Logger("FileEncryptPage");
+  late EncryptHelper encryptHelper;
   String? passwordToBeSet;
-  final help = Helper();
+  final _help = MiscHelper();
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -68,105 +82,103 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
     ));
   }
 
-  Widget inputPassword() {
+  Widget changeNameField() {
     return Form(
-      key: _formKey,
+      key: _resultNameFormKey,
       child: Column(
         children: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-            child: TextFormField(
-              obscureText: _isPasswordHidden,
-              maxLength: 20,
-              decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.password_rounded),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
-                      borderSide: const BorderSide(color: Colors.amberAccent)),
-                  suffixIcon: IconButton(
-                    icon: _isPasswordHidden
-                        ? const Icon(Icons.visibility_off_rounded)
-                        : const Icon(Icons.visibility_rounded),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordHidden = !_isPasswordHidden;
-                      });
-                    },
-                  )),
-              controller: passwordFieldController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter the password';
-                }
-                return null;
-              },
+          TextFormField(
+            maxLength: 20,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: const BorderSide(color: Colors.amberAccent)),
             ),
+            controller: resultNameFieldController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the name';
+              }
+              return null;
+            },
           ),
-          const SizedBox(
-            height: 10,
-            width: double.infinity,
-          ),
-          submitPasswordButton(),
+          ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  if (_resultNameFormKey.currentState!.validate()) {
+                    _resultName = resultNameFieldController.text;
+                  }
+                  Navigator.of(context).pop();
+                });
+              },
+              child: const Text('Change Name'))
         ],
       ),
     );
   }
 
-  Widget submitPasswordButton() => ElevatedButton(
-        onPressed: () async {
-          if (_formKey.currentState!.validate()) {
-            passwordToBeSet = passwordFieldController.text;
-            encryptFile();
-          }
-        },
-        child: widget.shouldEncrypt
-            ? const Text(
-                'Encrypt!',
-                style: TextStyle(color: Colors.white, fontSize: 15),
-              )
-            : const Text(
-                'Decrypt',
-                style: TextStyle(color: Colors.white, fontSize: 15),
+  Widget changeResultNameDialog() {
+    return BackdropFilter(
+      filter: ImageFilter.blur(),
+      child: Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(22.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                height: 10,
+                width: double.infinity,
               ),
-      );
-  Widget loadingScreen() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        const LoadingWidget(),
-        Text(
-          _currStatus,
-          style: const TextStyle(fontSize: 30),
+              const Text(
+                'Change Result File Name',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+              const SizedBox(
+                height: 15,
+              ),
+              changeNameField(),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 
-  Widget fileInfoBox() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          widget.pickedFile.files.first.name,
-          style: const TextStyle(fontSize: 20),
-        ),
-        const SizedBox(
-          height: 10,
-          width: double.infinity,
-        ),
-        Text(filesize(widget.pickedFile.files.first.size),
-            style: const TextStyle(fontSize: 15)),
-      ],
-    );
+  void cleanOldEncryptFiles() async {
+    Directory tempDir = Directory(((await getTemporaryDirectory()).path +
+        '/${_help.encryptTempFolderName}/' +
+        _help.encryptTempSubDirName));
+    tempDir.createSync(recursive: true);
+    var oldFile = File(tempDir.path + '/' + _resultName);
+    if (oldFile.existsSync()) {
+      oldFile.deleteSync(recursive: true);
+    }
+    oldFile =
+        File(tempDir.path + '/' + _resultName + '.' + _help.extensionName);
+    if (oldFile.existsSync()) {
+      oldFile.delete(recursive: true);
+    }
   }
 
-  void encryptFile() async {
+  @override
+  void dispose() {
+    setState(() {
+      _isLoading = false;
+    });
+    super.dispose();
+  }
+
+  void encryptionDecryptionHandler() async {
     setState(() {
       _isLoading = true;
       _currStatus = "Beginning Encryption";
     });
-    if (!await help.requestPermission(Permission.storage)) {
+    if (!await _help.requestPermission(Permission.storage)) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text("Denied Permission")));
       setState(() {
@@ -174,24 +186,61 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
       });
       return;
     }
-    var fileCrypt = AesCrypt(passwordFieldController.text);
+    fileCrypt = AesCrypt(passwordFieldController.text);
     fileCrypt.setOverwriteMode(AesCryptOwMode.rename);
     String filePath;
     if (widget.shouldEncrypt) {
+      encryptHelper = EncryptHelper(
+          pickedFiles: widget.pickedFile,
+          resultName: _resultName,
+          tempDirectory: (await getTemporaryDirectory()));
       try {
         setState(() {
-          _currStatus = "Encrypting";
+          _currStatus = "Cleaning up old Files";
         });
-        filePath = await compute(
-            fileCrypt.encryptFile, widget.pickedFile.paths.first!);
-        if (kDebugMode) {
-          print('Encryption Completed');
-          print('The file is at $filePath');
+        cleanOldEncryptFiles();
+        setState(() {
+          _currStatus = "Setting up new Files";
+        });
+        String tempDir = (await getTemporaryDirectory()).path;
+        final encryptedFilePath =
+            tempDir + '/' + _help.encryptTempFolderName + '/' + _resultName;
+        Directory encryptedTempDir =
+            await encryptHelper.setupEncryptedDirectory(false, true);
+        log.info('Encrypted file path $encryptedFilePath');
+        log.info('encryptedTempDir $encryptedTempDir');
+        await compute(CompressionHelper().dirToZip, <String, dynamic>{
+          'encryptionTempDirectory': encryptedTempDir,
+          'encryptedFilePath': encryptedFilePath,
+        });
+        setState(() {
+          _currStatus = "Encrypting";
+          log.info('Starting Encryption');
+        });
+        filePath = await compute(fileCrypt.encryptFile, encryptedFilePath);
+        File resultFile = File(filePath);
+        try {
+          await resultFile.rename(
+              filePath.substring(0, filePath.length - 3) + _help.extensionName);
+        } on FileSystemException catch (e) {
+          log.warning(
+              'File renaming failed trying copying now, error = ${e.toString()}');
+          final newFile = resultFile.copy(
+              filePath.substring(0, filePath.length - 3) + _help.extensionName);
+          resultFile.deleteSync();
+          resultFile = (await newFile);
+        }
+        log.info('ResultFile Copy success');
+
+        {
+          log.info('Encryption Completed');
+          log.info('The encryptedArchive is at ${resultFile.path}');
+          log.info('The file is at ${resultFile.path}');
         }
         setState(() {
-          _currStatus = "Encryption Completed";
-          _isLoading = false;
+          _currStatus = "Finished!";
         });
+
         Navigator.of(context).push(MaterialPageRoute(
             builder: (context) => LandingPage(
                   isEncryptedObject: true,
@@ -251,9 +300,113 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
     }
   }
 
+  Widget fileInfoBox() {
+    return GestureDetector(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            _resultName,
+            style: const TextStyle(fontSize: 20),
+          ),
+          const SizedBox(
+            height: 10,
+            width: double.infinity,
+          ),
+          Text(filesize(widget.pickedFile.files.first.size),
+              style: const TextStyle(fontSize: 15)),
+        ],
+      ),
+      onTap: () {
+        showDialog(context: context, builder: (_) => changeResultNameDialog());
+      },
+    );
+  }
+
   @override
   void initState() {
+    if (widget.pickedFile.files.length == 1) {
+      setState(() {
+        _resultName = widget.pickedFile.files.first.name;
+      });
+    }
     super.initState();
-    FilePicker.platform.clearTemporaryFiles();
   }
+
+  Widget inputPassword() {
+    return Form(
+      key: _passwordFormKey,
+      child: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+            child: TextFormField(
+              obscureText: _isPasswordHidden,
+              maxLength: 20,
+              decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.password_rounded),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: const BorderSide(color: Colors.amberAccent)),
+                  suffixIcon: IconButton(
+                    icon: _isPasswordHidden
+                        ? const Icon(Icons.visibility_off_rounded)
+                        : const Icon(Icons.visibility_rounded),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordHidden = !_isPasswordHidden;
+                      });
+                    },
+                  )),
+              controller: passwordFieldController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the password';
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+            width: double.infinity,
+          ),
+          submitPasswordButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget loadingScreen() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        const LoadingWidget(),
+        Text(
+          _currStatus,
+          style: const TextStyle(fontSize: 30),
+        ),
+      ],
+    );
+  }
+
+  Widget submitPasswordButton() => ElevatedButton(
+        onPressed: () async {
+          if (_passwordFormKey.currentState!.validate()) {
+            passwordToBeSet = passwordFieldController.text;
+            WidgetsFlutterBinding.ensureInitialized();
+            encryptionDecryptionHandler();
+          }
+        },
+        child: widget.shouldEncrypt
+            ? const Text(
+                'Encrypt!',
+                style: TextStyle(fontSize: 15),
+              )
+            : const Text(
+                'Decrypt',
+                style: TextStyle(fontSize: 15),
+              ),
+      );
 }

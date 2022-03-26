@@ -1,7 +1,9 @@
 import 'package:encryptF/pages/file_encrypt_page.dart';
 import 'package:encryptF/widgets/loading_widget.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,7 +20,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Encrypt!"),
+          title: const Text(
+            "Encrypt!",
+            style: TextStyle(color: Colors.black),
+          ),
         ),
         body: _isLoading
             ? const Center(
@@ -48,6 +53,9 @@ class _HomeScreenState extends State<HomeScreen> {
           });
           encryptDecryptFile();
         },
+        style: ButtonStyle(
+          padding: MaterialStateProperty.all(const EdgeInsets.all(10)),
+        ),
         icon: const Icon(Icons.enhanced_encryption_rounded),
         label: const Text(
           'Encrypt',
@@ -63,23 +71,57 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         encryptDecryptFile();
       },
+      style: ButtonStyle(
+        padding: MaterialStateProperty.all(const EdgeInsets.all(10)),
+      ),
       icon: const Icon(Icons.lock_open_rounded),
       label: const Text('Decrypt', style: TextStyle(fontSize: 25)));
   void encryptDecryptFile() async {
-    FilePicker.platform
-        .pickFiles(allowMultiple: false)
-        .then((FilePickerResult? value) async {
-      if (value != null) {
-        await Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => FileEncryptPage(
-                  pickedFile: value,
-                  shouldEncrypt: _shouldEncrypt,
-                )));
+    try {
+      final pickedFile =
+          await FilePicker.platform.pickFiles(allowMultiple: true);
+      setState(() {
+        _isLoading = false;
+      });
+      if (pickedFile == null) {
+        return;
       }
-    }).whenComplete(() => {
-              setState(() {
-                _isLoading = false;
-              })
-            });
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => FileEncryptPage(
+              pickedFile: pickedFile, shouldEncrypt: _shouldEncrypt)));
+    } on PlatformException catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      showDialog(
+          context: context,
+          builder: (_) =>
+              filePickError("UnSupported Operation + ${e.toString()}"));
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (kDebugMode) {
+        print('Error! ${e.toString()}');
+      }
+      showDialog(
+          context: context,
+          builder: (_) =>
+              filePickError("An unexpected exception has occurred!"));
+    }
+  }
+
+  Widget filePickError(String error) {
+    return AlertDialog(
+      title: const Text("Error!"),
+      content: Text(error),
+      actions: [
+        ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Ok')),
+      ],
+    );
   }
 }
