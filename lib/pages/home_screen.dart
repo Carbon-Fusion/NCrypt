@@ -1,4 +1,5 @@
 import 'package:encryptF/pages/file_encrypt_page.dart';
+import 'package:encryptF/pages/new_notes.dart';
 import 'package:encryptF/widgets/loading_widget.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -34,9 +35,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   logo(),
-                  Row(
+                  Column(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [encryptFileButton(), decryptFileButton()],
+                    children: [
+                      encryptFileButton(),
+                      decryptFileButton(),
+                      newNoteButton()
+                    ],
                   )
                 ],
               ),
@@ -45,6 +50,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget logo() => Image.asset('assets/logo.webp');
+
+  Widget newNoteButton() => ElevatedButton.icon(
+      onPressed: () {
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => const NewNotes()));
+      },
+      icon: const Icon(Icons.fiber_new),
+      label: const Text('Open NewNotes'));
+
   Widget encryptFileButton() => ElevatedButton.icon(
         onPressed: () {
           setState(() {

@@ -48,3 +48,9 @@ class MiscHelper {
     }
   }
 }
+
+Future<void> deleteDirectory(Directory toDel) async {
+  if (toDel.existsSync()) {
+    toDel.delete(recursive: true);
+  }
+}

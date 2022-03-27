@@ -23,7 +23,7 @@ class EncryptHelper {
   /// This directory resides at
   /// ~/cache/EnrcyptTemp/folders/[result_name]
   Future<Directory> setupEncryptedDirectory(
-      bool isAsset, bool createConfigFile) async {
+      {required bool isAsset, required bool createConfigFile}) async {
     String baseDirPath = getEncryptTempDir();
     Directory storageDirectory = Directory('$baseDirPath/$resultName');
     if (await storageDirectory.exists()) {
@@ -51,7 +51,7 @@ class EncryptHelper {
 
   Future<void> _copyFiles(EncryptedDirObject dirObject) async {
     log.info('The Asset Folder is at ${getAssetFolderPath()}');
-    log.info('The Asset Folder is at ${getFileFolderPath()}');
+    log.info('The File Folder is at ${getFileFolderPath()}');
 
     for (var file in dirObject.files) {
       String newPath = dirObject.isAsset

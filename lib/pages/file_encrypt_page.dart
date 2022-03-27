@@ -205,10 +205,12 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
         String tempDir = (await getTemporaryDirectory()).path;
         final encryptedFilePath =
             tempDir + '/' + _help.encryptTempFolderName + '/' + _resultName;
-        Directory encryptedTempDir =
-            await encryptHelper.setupEncryptedDirectory(false, true);
+        Directory encryptedTempDir = await encryptHelper
+            .setupEncryptedDirectory(isAsset: false, createConfigFile: true);
         log.info('Encrypted file path $encryptedFilePath');
         log.info('encryptedTempDir $encryptedTempDir');
+
+        /// get Zip from ~/cache/EnrcyptTemp/folders/[result_name] and save it ~/cache/EncryptTemp/[result_name]
         await compute(CompressionHelper().dirToZip, <String, dynamic>{
           'encryptionTempDirectory': encryptedTempDir,
           'encryptedFilePath': encryptedFilePath,

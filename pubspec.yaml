@@ -46,6 +46,8 @@ dependencies:
   archive: ^3.2.2
   json_annotation: ^4.4.0
   logging: ^1.0.2
+  flutter_quill: ^4.0.11
+  flutter_file_dialog: ^2.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
