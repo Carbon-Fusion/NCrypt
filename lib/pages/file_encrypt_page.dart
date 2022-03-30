@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
@@ -5,6 +6,7 @@ import 'package:aes_crypt_null_safe/aes_crypt_null_safe.dart';
 import 'package:encryptF/helpers/compression_helper.dart';
 import 'package:encryptF/helpers/encrypt_helper.dart';
 import 'package:encryptF/pages/landing_page.dart';
+import 'package:encryptF/pages/new_notes.dart';
 import 'package:encryptF/widgets/loading_widget.dart';
 import 'package:file_icon/file_icon.dart';
 import 'package:file_picker/file_picker.dart';
@@ -16,6 +18,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../helpers/misc_helper.dart';
+import '../model/file_info.dart';
 
 class FileEncryptPage extends StatefulWidget {
   final FilePickerResult pickedFile;
@@ -35,6 +38,7 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
   String _currStatus = "...";
   String _resultName = "NCrypt";
   late AesCrypt fileCrypt;
+
   // final _goldColor = const Color.fromRGBO(255, 223, 54, 0.5);
   final _passwordFormKey = GlobalKey<FormState>();
   final _resultNameFormKey = GlobalKey<FormState>();
@@ -44,6 +48,7 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
   late EncryptHelper encryptHelper;
   String? passwordToBeSet;
   final _help = MiscHelper();
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -264,42 +269,83 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
                 )));
       }
     } else {
+      setState(() {
+        _isLoading = true;
+        _currStatus = 'Decrypting';
+      });
+      final fileName = widget.pickedFile.files.first.name;
+      final decryptHelper = EncryptHelper(
+          pickedFiles: widget.pickedFile,
+          resultName: fileName,
+          tempDirectory: (await getTemporaryDirectory()));
+      fileCrypt.setPassword(passwordFieldController.text);
+      fileCrypt.setOverwriteMode(AesCryptOwMode.rename);
+      String resultFilePath;
       try {
-        setState(() {
-          _currStatus = "Decrypting";
-        });
-        filePath = await compute(
-            fileCrypt.decryptFile, widget.pickedFile.paths.first!);
-        if (kDebugMode) {
-          print('Decryption Completed');
-          print('The file is at $filePath');
-        }
-        setState(() {
-          _currStatus = "Decryption Completed";
-          _isLoading = false;
-        });
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => LandingPage(
-                  isEncryptedObject: true,
-                  filePath: filePath,
-                  wasSuccess: true,
-                )));
+        resultFilePath = await compute(
+            fileCrypt.decryptFile, widget.pickedFile.files.first.path!);
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error in Decryption!')));
-        setState(() {
-          _currStatus = "Error!";
-          _isLoading = false;
-        });
+        showDialog(
+            context: context, builder: (_) => decryptionError(e.toString()));
+        return;
+      }
+      setState(() {
+        _currStatus = 'Checking Files';
+      });
+      final archive = await decryptHelper.checkDecryptionFile(resultFilePath);
+      if (archive == null) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('INVALID FILE')));
+        return;
+      }
 
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => const LandingPage(
-                  isEncryptedObject: false,
-                  filePath: null,
-                  wasSuccess: false,
-                )));
+      setState(() {
+        _currStatus = 'Setting Files';
+      });
+      String filePath = decryptHelper.getDecryptTempDir() + '/$fileName';
+      await CompressionHelper().archiveToDir(<String, dynamic>{
+        'archive': archive,
+        'outputPath': decryptHelper.getDecryptTempDir() + '/$fileName',
+      });
+      pageHandler(filePath);
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void pageHandler(String dirPath) {
+    final configFilePath = dirPath + '/${_help.configFileName}';
+    final configFile = File(configFilePath);
+    if (configFile.existsSync()) {
+      final fileInfo =
+          FileInfo.fromJson(jsonDecode(configFile.readAsStringSync()));
+      if (fileInfo.fileType == _help.fileTypeNote) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (_) => NewNotes(note: Directory(dirPath))));
+      } else if (fileInfo.fileType == _help.fileTypeFile) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (_) => LandingPage(
+                isEncryptedObject: false,
+                filePath: dirPath,
+                wasSuccess: true)));
       }
     }
+  }
+
+  Widget decryptionError(String error) {
+    return AlertDialog(
+      title: const Text("Error in decryption!"),
+      content: Text(error),
+      actions: [
+        ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Ok')),
+      ],
+    );
   }
 
   Widget fileInfoBox() {
@@ -393,22 +439,24 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
     );
   }
 
-  Widget submitPasswordButton() => ElevatedButton(
-        onPressed: () async {
-          if (_passwordFormKey.currentState!.validate()) {
-            passwordToBeSet = passwordFieldController.text;
-            WidgetsFlutterBinding.ensureInitialized();
-            encryptionDecryptionHandler();
-          }
-        },
-        child: widget.shouldEncrypt
-            ? const Text(
-                'Encrypt!',
-                style: TextStyle(fontSize: 15),
-              )
-            : const Text(
-                'Decrypt',
-                style: TextStyle(fontSize: 15),
-              ),
-      );
+  Widget submitPasswordButton() {
+    return ElevatedButton(
+      onPressed: () async {
+        if (_passwordFormKey.currentState!.validate()) {
+          passwordToBeSet = passwordFieldController.text;
+          WidgetsFlutterBinding.ensureInitialized();
+          encryptionDecryptionHandler();
+        }
+      },
+      child: widget.shouldEncrypt
+          ? const Text(
+              'Encrypt!',
+              style: TextStyle(fontSize: 15),
+            )
+          : const Text(
+              'Decrypt',
+              style: TextStyle(fontSize: 15),
+            ),
+    );
+  }
 }

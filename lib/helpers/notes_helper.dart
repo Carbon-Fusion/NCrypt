@@ -26,8 +26,11 @@ class NotesHelper {
         .createSync(recursive: true);
     Directory(storageDirectory.path + '/${_help.assetFolderName}')
         .createSync(recursive: true);
-    final configFileContent = json.encode(
-        FileInfo(fileType: 'note', jsonVersion: _help.jsonVersion).toJson());
+    final configFileContent = json.encode(FileInfo(
+            fileType: _help.fileTypeFile,
+            jsonVersion: _help.jsonVersion,
+            fileName: resultName)
+        .toJson());
     File(storageDirectory.path + '/' + _help.configFileName)
         .writeAsString(configFileContent);
     return storageDirectory;
@@ -36,6 +39,28 @@ class NotesHelper {
   /// returns ~/cache/EncryptTemp/folders
   String getEncryptTempDir() {
     return '${tempDirectory.path}/${_help.encryptTempFolderName}/${_help.encryptTempSubDirName}';
+  }
+
+  Future<void> addFile(List<File> fileToAdd) async {
+    for (var file in fileToAdd) {
+      final fileName = file.path.split('/').last;
+      final fileToBePath = getEncryptTempDir() +
+          '/$resultName/' +
+          '${_help.fileFolderName}/$fileName';
+      final oldFile = File(fileToBePath);
+      if (oldFile.existsSync()) {
+        oldFile.deleteSync(recursive: true);
+      }
+      file.copy(fileToBePath);
+    }
+  }
+
+  Future<void> removeFile(List<File> fileToRemove) async {
+    for (var file in fileToRemove) {
+      if (file.existsSync()) {
+        file.delete(recursive: true);
+      }
+    }
   }
 
   Future<void> addAsset(List<File> assetToAdd) async {
@@ -65,16 +90,20 @@ class NotesHelper {
     final String newPath = '${getEncryptTempDir()}/${renameObject.newName}';
     final Directory currDir = Directory(currPath);
     if (Directory(newPath).existsSync()) {
-      Directory(newPath).deleteSync();
+      Directory(newPath).deleteSync(recursive: true);
     }
     currDir.rename(newPath);
   }
 
-  Future<String> prepareToSaveNote() async {
-    String currPath = '${getEncryptTempDir()}/$resultName';
-    final configFilePath = '$currPath/${_help.configFileName}';
-    if (!File(configFilePath).existsSync()) {
-      throw Exception('Config file! does not exist!');
+  String getConfigFilePath() {
+    return '${getEncryptTempDir()}/$resultName/${_help.configFileName}';
+  }
+
+  Future<String> prepareToSaveNote(String jsonToSave) async {
+    final configFilePath = getConfigFilePath();
+    final configFile = File(configFilePath);
+    if (configFile.existsSync()) {
+      configFile.deleteSync();
     } else {
       final File resultFile =
           File('${getEncryptTempDir()}/$resultName.${_help.extensionName}');
@@ -82,6 +111,23 @@ class NotesHelper {
         resultFile.deleteSync();
       }
     }
+    configFile.writeAsString(jsonEncode(FileInfo(
+            fileName: resultName,
+            fileType: _help.fileTypeNote,
+            jsonVersion: _help.jsonVersion)
+        .toJson()));
+    String documentPath = getEncryptTempDir() +
+        '/$resultName/' +
+        _help.fileFolderName +
+        '/document';
+    final oldDocument = File(getEncryptTempDir() +
+        '/$resultName/' +
+        _help.fileFolderName +
+        '/document');
+    if (oldDocument.existsSync()) {
+      oldDocument.deleteSync();
+    }
+    File(documentPath).writeAsString(jsonToSave);
     return '$tempDirectory/${_help.encryptTempFolderName}/$resultName';
   }
 }

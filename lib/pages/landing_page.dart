@@ -7,11 +7,13 @@ class LandingPage extends StatefulWidget {
   final bool isEncryptedObject;
   final bool wasSuccess;
   final String? filePath;
+  final bool? isFile;
   const LandingPage(
       {Key? key,
       required this.isEncryptedObject,
       required this.filePath,
-      required this.wasSuccess})
+      required this.wasSuccess,
+      this.isFile})
       : super(key: key);
 
   @override

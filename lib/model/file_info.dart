@@ -6,8 +6,12 @@ part 'file_info.g.dart';
 class FileInfo {
   final String fileType;
   final String jsonVersion;
+  final String fileName;
 
-  const FileInfo({required this.fileType, required this.jsonVersion});
+  const FileInfo(
+      {required this.fileType,
+      required this.jsonVersion,
+      required this.fileName});
 
   factory FileInfo.fromJson(Map<String, dynamic> json) =>
       _$FileInfoFromJson(json);

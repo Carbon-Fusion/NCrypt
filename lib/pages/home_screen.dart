@@ -1,3 +1,4 @@
+import 'package:encryptF/helpers/misc_helper.dart';
 import 'package:encryptF/pages/file_encrypt_page.dart';
 import 'package:encryptF/pages/new_notes.dart';
 import 'package:encryptF/widgets/loading_widget.dart';
@@ -16,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   bool _shouldEncrypt = false;
+  final _help = MiscHelper();
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -40,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       encryptFileButton(),
                       decryptFileButton(),
-                      newNoteButton()
+                      newNoteButton(),
                     ],
                   )
                 ],
@@ -52,12 +54,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget logo() => Image.asset('assets/logo.webp');
 
   Widget newNoteButton() => ElevatedButton.icon(
-      onPressed: () {
+      onPressed: () async {
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const NewNotes()));
       },
       icon: const Icon(Icons.fiber_new),
-      label: const Text('Open NewNotes'));
+      label: const Text('New Note'));
 
   Widget encryptFileButton() => ElevatedButton.icon(
         onPressed: () {
@@ -90,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       icon: const Icon(Icons.lock_open_rounded),
       label: const Text('Decrypt', style: TextStyle(fontSize: 25)));
+
   void encryptDecryptFile() async {
     try {
       final pickedFile =
@@ -102,7 +105,9 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => FileEncryptPage(
-              pickedFile: pickedFile, shouldEncrypt: _shouldEncrypt)));
+                pickedFile: pickedFile,
+                shouldEncrypt: _shouldEncrypt,
+              )));
     } on PlatformException catch (e) {
       setState(() {
         _isLoading = false;

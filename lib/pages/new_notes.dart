@@ -1,10 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:aes_crypt_null_safe/aes_crypt_null_safe.dart';
 import 'package:encryptF/helpers/compression_helper.dart';
 import 'package:encryptF/helpers/misc_helper.dart';
 import 'package:encryptF/helpers/notes_helper.dart';
+import 'package:encryptF/model/file_info.dart';
 import 'package:encryptF/widgets/loading_widget.dart';
 import 'package:file_icon/file_icon.dart';
 import 'package:file_picker/file_picker.dart';
@@ -16,8 +17,11 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../widgets/dialog_builder.dart';
+
 class NewNotes extends StatefulWidget {
-  const NewNotes({Key? key}) : super(key: key);
+  final Directory? note;
+  const NewNotes({Key? key, this.note}) : super(key: key);
 
   @override
   State<NewNotes> createState() => _NewNotesState();
@@ -35,7 +39,8 @@ class _NewNotesState extends State<NewNotes> {
   final passwordFieldController = TextEditingController();
   final _passwordFormKey = GlobalKey<FormState>();
   final FocusNode _focusNode = FocusNode();
-  List<Widget> attachments = [];
+  List<File> attachments = [];
+  Set<String> includedAttachmentPaths = {};
   QuillController? _controller;
   String title = 'New Note';
   @override
@@ -50,9 +55,24 @@ class _NewNotesState extends State<NewNotes> {
                 const SizedBox(
                   height: 5,
                 ),
-                ListView(
+                ListView.builder(
                   shrinkWrap: true,
-                  children: attachments,
+                  itemCount: attachments.length,
+                  itemBuilder: (context, index) {
+                    return Dismissible(
+                        key: Key(attachments[index].path),
+                        onDismissed: (DismissDirection direction) async {
+                          setState(() {
+                            attachments.removeAt(index);
+                          });
+                          final newNotesHelper = NotesHelper(
+                              tempDirectory: (await getTemporaryDirectory()),
+                              resultName: title);
+                          newNotesHelper
+                              .removeAsset([File(attachments[index].path)]);
+                        },
+                        child: _containerForAttachment(attachments[index]));
+                  },
                 ),
               ],
             ),
@@ -156,48 +176,14 @@ class _NewNotesState extends State<NewNotes> {
     );
   }
 
-  Widget _buildDialog(
-      {required String dialogBoxTitle, required Widget widgetToShow}) {
-    return BackdropFilter(
-      filter: ImageFilter.blur(),
-      child: Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(22.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(
-                height: 10,
-                width: double.infinity,
-              ),
-              FlutterText.Text(
-                dialogBoxTitle,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-              ),
-              const SizedBox(
-                height: 15,
-              ),
-              widgetToShow,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget changeResultNameDialog() {
-    return _buildDialog(
+    return DialogBuilder(
         dialogBoxTitle: 'Change Result File Name',
         widgetToShow: changeNameField());
   }
 
   Widget setPasswordDialog() {
-    return _buildDialog(
+    return DialogBuilder(
         dialogBoxTitle: 'Set Password', widgetToShow: setPasswordField());
   }
 
@@ -220,19 +206,17 @@ class _NewNotesState extends State<NewNotes> {
               .pickFiles(allowMultiple: true)
               .then((value) async {
             if (value != null) {
-              final saveTitle = title;
-              setState(() {
-                title = 'Loading ...';
-              });
               List<File> addedFiles = [];
               for (var pickedFiles in value.files) {
-                attachments.add(_containerForAttachment(pickedFiles));
-                addedFiles.add(File(pickedFiles.path!));
+                setState(() {
+                  if (!includedAttachmentPaths.contains(pickedFiles.path!)) {
+                    attachments.add(File(pickedFiles.path!));
+                    addedFiles.add(File(pickedFiles.path!));
+                    includedAttachmentPaths.add(pickedFiles.path!);
+                  }
+                });
               }
               await newNotesHelper.addAsset(addedFiles);
-              setState(() {
-                title = saveTitle;
-              });
             }
           });
         },
@@ -264,7 +248,8 @@ class _NewNotesState extends State<NewNotes> {
   Future<void> _saveSteps() async {
     final newNoteHelper = NotesHelper(
         tempDirectory: (await getTemporaryDirectory()), resultName: title);
-    await newNoteHelper.prepareToSaveNote();
+    final documentJson = jsonEncode(_controller!.document.toDelta().toJson());
+    await newNoteHelper.prepareToSaveNote(documentJson);
     if (password == null) {
       await showDialog(context: context, builder: (_) => setPasswordDialog());
     }
@@ -305,46 +290,39 @@ class _NewNotesState extends State<NewNotes> {
     return resultFile;
   }
 
-  Widget _containerForAttachment(PlatformFile platformFile) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        FileIcon(platformFile.name),
-        const SizedBox(
-          width: 5,
-        ),
-        FlutterText.Text(
-          platformFile.name,
-          style: const TextStyle(color: Colors.white),
-        ),
-        const Spacer(),
-        IconButton(
-            onPressed: () async {
-              final newNotesHelper = NotesHelper(
-                  tempDirectory: (await getTemporaryDirectory()),
-                  resultName: title);
-              newNotesHelper.removeAsset([File(platformFile.path!)]);
-            },
-            icon: const Icon(Icons.cancel_outlined))
-      ],
+  Widget _containerForAttachment(File file) {
+    final name = file.path.split('/').last;
+    return ListTile(
+      leading: FileIcon(name),
+      title: FlutterText.Text(
+        name,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: Colors.white),
+      ),
+      onLongPress: () {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: FlutterText.Text(name)));
+      },
     );
   }
 
   Widget _loadingScreen() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const LoadingWidget(),
-        const SizedBox(
-          height: 15,
-        ),
-        FlutterText.Text(
-          _currStatus,
-          style: const TextStyle(fontSize: 20, color: Colors.white),
-        ),
-      ],
+    return Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const LoadingWidget(),
+          const SizedBox(
+            height: 15,
+          ),
+          FlutterText.Text(
+            _currStatus,
+            style: const TextStyle(fontSize: 20, color: Colors.white),
+          ),
+        ],
+      ),
     );
   }
 
@@ -360,8 +338,10 @@ class _NewNotesState extends State<NewNotes> {
         expands: true);
     final toolBar = QuillToolbar.basic(
       controller: _controller!,
-      onImagePickCallback: _onImagePickCallBack,
-      onVideoPickCallback: _onVideoPickCallBack,
+
+      /// Intentionally Don't provide
+      // onImagePickCallback: _onImagePickCallBack,
+      // onVideoPickCallback: _onVideoPickCallBack,
     );
 
     return Expanded(
@@ -387,14 +367,48 @@ class _NewNotesState extends State<NewNotes> {
     return file.path.toString();
   }
 
+  Future<void> _loadAssets() async {
+    final assetFolder =
+        Directory(widget.note!.path + '/${_help.assetFolderName}');
+    if (assetFolder.existsSync()) {
+      for (var entity in assetFolder.listSync()) {
+        if (entity is File) {
+          setState(() {
+            attachments.add(entity);
+          });
+        }
+      }
+    }
+  }
+
   Future<void> _loadPage() async {
-    final Document doc = Document()..insert(0, 'Empty');
+    var newDoc = Document()..insert(0, 'Empty');
+
+    if (widget.note != null) {
+      final configFile = File(widget.note!.path + '/${_help.configFileName}');
+      if (!configFile.existsSync()) {
+        throw Exception('No Config FILE found fatal!');
+      }
+      final fileInfo =
+          FileInfo.fromJson(jsonDecode(configFile.readAsStringSync()));
+
+      setState(() {
+        title = fileInfo.fileName;
+      });
+
+      final documentFile =
+          File(widget.note!.path + '/${_help.fileFolderName}/document');
+      if (documentFile.existsSync()) {
+        newDoc = Document.fromJson(jsonDecode(documentFile.readAsStringSync()));
+      }
+    }
     _notesHelper = NotesHelper(
         tempDirectory: (await getTemporaryDirectory()), resultName: title);
     _notesHelper.setupNoteEncryptDir();
     setState(() {
       _controller = QuillController(
-          document: doc, selection: const TextSelection.collapsed(offset: 0));
+          document: newDoc,
+          selection: const TextSelection.collapsed(offset: 0));
     });
   }
 
@@ -402,5 +416,8 @@ class _NewNotesState extends State<NewNotes> {
   void initState() {
     super.initState();
     _loadPage();
+    if (widget.note != null) {
+      _loadAssets();
+    }
   }
 }

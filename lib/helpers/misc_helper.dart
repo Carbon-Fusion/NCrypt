@@ -14,6 +14,9 @@ class MiscHelper {
   final String extensionName = 'ncrypt';
   final String encryptTempFolderName = 'EncryptTemp';
   final String encryptTempSubDirName = 'folders';
+  final String newNoteName = 'New Note';
+  final String fileTypeNote = 'note';
+  final String fileTypeFile = 'file';
   Future<bool> requestPermission(Permission permission) async {
     if (await permission.isGranted) {
       return true;
