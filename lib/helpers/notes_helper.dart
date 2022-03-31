@@ -137,18 +137,20 @@ class NotesHelper {
         '${getEncryptTempDir()}/${renameObject.oldName}/${_help.configFileName}';
     final newConfigFile = File(newConfigFilePath);
     final oldConfigFile = File(oldConfigFilePath);
-    final oldConfig =
-        FileInfo.fromJson(jsonDecode(oldConfigFile.readAsStringSync()));
     await currDir.rename(newPath);
-    final newConfig = FileInfo(
-        fileType: oldConfig.fileType,
-        jsonVersion: oldConfig.jsonVersion,
-        fileName: renameObject.newName);
-    if (newConfigFile.existsSync()) {
-      newConfigFile.deleteSync();
+    if (oldConfigFile.existsSync()) {
+      final oldConfig =
+          FileInfo.fromJson(jsonDecode(oldConfigFile.readAsStringSync()));
+      final newConfig = FileInfo(
+          fileType: oldConfig.fileType,
+          jsonVersion: oldConfig.jsonVersion,
+          fileName: renameObject.newName);
+      if (newConfigFile.existsSync()) {
+        newConfigFile.deleteSync();
+      }
+      newConfigFile.createSync(recursive: true);
+      newConfigFile.writeAsStringSync(jsonEncode(newConfig.toJson()));
     }
-    newConfigFile.createSync(recursive: true);
-    newConfigFile.writeAsStringSync(jsonEncode(newConfig.toJson()));
   }
 
   String getConfigFilePath() {
