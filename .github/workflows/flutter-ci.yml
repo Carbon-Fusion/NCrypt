@@ -25,15 +25,14 @@ jobs:
       # Setup the flutter environment.
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'beta' # 'dev', 'alpha', default to: 'stable'
+          channel: 'stable' # 'dev', 'alpha', default to: 'stable'
           # flutter-version: '1.12.x' # you can also specify exact version of flutter
 
       # Get flutter dependencies.
       - run: flutter pub get
 
       # Build apk.
-      - run: flutter build apk --no-tree-shake-icons --split-per-abi
-
+      - run: flutter build apk --no-tree-shake-icons
       # Upload generated apk to the artifacts.
       - uses: actions/upload-artifact@v3
         with:
