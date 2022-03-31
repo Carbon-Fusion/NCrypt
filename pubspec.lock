@@ -361,10 +361,12 @@ packages:
   flutter_quill:
     dependency: "direct main"
     description:
-      name: flutter_quill
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "4.0.11"
+      path: "."
+      ref: master
+      resolved-ref: "4c4301f136638c347212960132a117d5a44c9251"
+      url: "https://github.com/singerdmx/flutter-quill.git"
+    source: git
+    version: "4.1.0"
   flutter_spinkit:
     dependency: "direct main"
     description:
