@@ -27,8 +27,14 @@ class EncryptHelper {
   Future<Directory> setupEncryptedDirectory(
       {required bool isAsset, required bool createConfigFile}) async {
     Directory storageDirectory = _setUpDirs(getEncryptTempDir);
-    await compute(_copyFiles,
-        EncryptedDirObject(pickedFiles.files, storageDirectory, isAsset));
+    await compute(
+        copyFiles,
+        EncryptedDirObject(
+            pickedFiles: pickedFiles.files,
+            copyFiles: [],
+            assetFolderPath: getAssetFolderPath(),
+            fileFolderPath: getFileFolderPath(),
+            isAsset: isAsset));
     log.info('Copied over Files');
     if (createConfigFile) {
       final configFileContent = json.encode(FileInfo(
@@ -36,8 +42,10 @@ class EncryptHelper {
               jsonVersion: _help.jsonVersion,
               fileName: resultName)
           .toJson());
-      File(storageDirectory.path + '/' + _help.configFileName)
-          .writeAsString(configFileContent);
+      final configFile =
+          File(storageDirectory.path + '/' + _help.configFileName);
+      configFile.createSync(recursive: true);
+      configFile.writeAsStringSync(configFileContent);
       log.info('Created config files');
     }
     return storageDirectory;
@@ -74,27 +82,6 @@ class EncryptHelper {
     return storageDirectory;
   }
 
-  Future<void> _copyFiles(EncryptedDirObject dirObject) async {
-    log.info('The Asset Folder is at ${getAssetFolderPath()}');
-    log.info('The File Folder is at ${getFileFolderPath()}');
-
-    for (var file in dirObject.files) {
-      String newPath = dirObject.isAsset
-          ? getAssetFolderPath() + '/' + file.name
-          : getFileFolderPath() + '/' + file.name;
-      File oldFile = File(file.path!);
-      try {
-        await oldFile.rename(newPath);
-      } on FileSystemException catch (e) {
-        log.warning(
-            'File renaming failed trying copying now, error = ${e.toString()}');
-        oldFile.copy(newPath);
-        await oldFile.delete();
-      }
-      log.info('Copy Success');
-    }
-  }
-
   Future<Archive?> checkDecryptionFile(String pathToCheck) async {
     final ncryptFile = await CompressionHelper().zipView(pathToCheck);
     bool found = false;
@@ -129,11 +116,4 @@ class EncryptHelper {
   String getDecryptTempDir() {
     return getEncryptTempDir();
   }
-}
-
-class EncryptedDirObject {
-  final List<PlatformFile> files;
-  final Directory storageDirectoryPath;
-  final bool isAsset;
-  const EncryptedDirObject(this.files, this.storageDirectoryPath, this.isAsset);
 }

@@ -404,7 +404,13 @@ class _NewNotesState extends State<NewNotes> {
     }
     _notesHelper = NotesHelper(
         tempDirectory: (await getTemporaryDirectory()), resultName: title);
-    _notesHelper.setupNoteEncryptDir();
+
+    if (widget.note != null) {
+      _notesHelper.setupNoteEncryptDir(
+          isNew: true, inputDirPath: widget.note!.path);
+    } else {
+      _notesHelper.setupNoteEncryptDir();
+    }
     setState(() {
       _controller = QuillController(
           document: newDoc,

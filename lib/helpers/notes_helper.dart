@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:encryptF/helpers/misc_helper.dart';
+import 'package:flutter/foundation.dart';
 
 import '../model/file_info.dart';
 
@@ -15,10 +16,10 @@ class NotesHelper {
   /// Cleans up any old data and creates a fresh Directory
   /// This directory resides at
   /// ~/cache/EnrcyptTemp/folders/[result_name]
-  Future<Directory> setupNoteEncryptDir() async {
+  Future<Directory> setupNoteEncryptDir(
+      {bool? isNew, String? inputDirPath}) async {
     String baseDir = getEncryptTempDir();
     Directory storageDirectory = Directory(baseDir + '/$resultName');
-
     if (storageDirectory.existsSync()) {
       storageDirectory.deleteSync(recursive: true);
     }
@@ -26,19 +27,57 @@ class NotesHelper {
         .createSync(recursive: true);
     Directory(storageDirectory.path + '/${_help.assetFolderName}')
         .createSync(recursive: true);
-    final configFileContent = json.encode(FileInfo(
-            fileType: _help.fileTypeFile,
-            jsonVersion: _help.jsonVersion,
-            fileName: resultName)
-        .toJson());
-    File(storageDirectory.path + '/' + _help.configFileName)
-        .writeAsString(configFileContent);
+    final oldConfigFilePath = inputDirPath! + '/' + _help.configFileName;
+    final oldConfigFile = File(oldConfigFilePath);
+    if (isNew != null) {
+      final newConfigFilePath =
+          storageDirectory.path + '/${_help.configFileName}';
+      // copy fileFolder
+      compute(
+          copyFiles,
+          EncryptedDirObject(
+              pickedFiles: [],
+              copyFiles: Directory(inputDirPath + '/${_help.fileFolderName}')
+                  .listSync(),
+              assetFolderPath: getAssetFolderPath(),
+              fileFolderPath: getFileFolderPath(),
+              isAsset: false));
+      // copy assets
+      await compute(
+          copyFiles,
+          EncryptedDirObject(
+              pickedFiles: [],
+              copyFiles: Directory(inputDirPath + '/${_help.assetFolderName}')
+                  .listSync(),
+              assetFolderPath: getAssetFolderPath(),
+              fileFolderPath: getFileFolderPath(),
+              isAsset: true));
+      // copy configFile
+      oldConfigFile.copySync(newConfigFilePath);
+    } else {
+      final configFileContent = json.encode(FileInfo(
+              fileType: _help.fileTypeFile,
+              jsonVersion: _help.jsonVersion,
+              fileName: resultName)
+          .toJson());
+      oldConfigFile.writeAsString(configFileContent);
+    }
     return storageDirectory;
   }
 
   /// returns ~/cache/EncryptTemp/folders
   String getEncryptTempDir() {
     return '${tempDirectory.path}/${_help.encryptTempFolderName}/${_help.encryptTempSubDirName}';
+  }
+
+  /// returns ~/cache/EncryptTemp/folders/[result_name]/files
+  String getFileFolderPath() {
+    return getEncryptTempDir() + '/$resultName/${_help.fileFolderName}';
+  }
+
+  /// returns ~/cache/EncryptTemp/folders/[result_name]/assets
+  String getAssetFolderPath() {
+    return getEncryptTempDir() + '/$resultName/${_help.assetFolderName}';
   }
 
   Future<void> addFile(List<File> fileToAdd) async {
@@ -92,7 +131,24 @@ class NotesHelper {
     if (Directory(newPath).existsSync()) {
       Directory(newPath).deleteSync(recursive: true);
     }
-    currDir.rename(newPath);
+    String newConfigFilePath =
+        '${getEncryptTempDir()}/${renameObject.newName}/${_help.configFileName}';
+    String oldConfigFilePath =
+        '${getEncryptTempDir()}/${renameObject.oldName}/${_help.configFileName}';
+    final newConfigFile = File(newConfigFilePath);
+    final oldConfigFile = File(oldConfigFilePath);
+    final oldConfig =
+        FileInfo.fromJson(jsonDecode(oldConfigFile.readAsStringSync()));
+    await currDir.rename(newPath);
+    final newConfig = FileInfo(
+        fileType: oldConfig.fileType,
+        jsonVersion: oldConfig.jsonVersion,
+        fileName: renameObject.newName);
+    if (newConfigFile.existsSync()) {
+      newConfigFile.deleteSync();
+    }
+    newConfigFile.createSync(recursive: true);
+    newConfigFile.writeAsStringSync(jsonEncode(newConfig.toJson()));
   }
 
   String getConfigFilePath() {
