@@ -33,33 +33,47 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: LoadingWidget(),
               )
             : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Expanded(child: Container()),
                   logo(),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      encryptFileButton(),
-                      decryptFileButton(),
-                      newNoteButton(),
-                    ],
-                  )
+                  newNoteButton(),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  decryptFileButton(),
+                  Expanded(child: Container()),
                 ],
               ),
       ),
     );
   }
 
-  Widget logo() => Image.asset('assets/logo.webp');
+  Widget logo() {
+    return Container(
+      height: 192,
+      width: 192,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage('assets/logo.webp'), fit: BoxFit.fill)),
+    );
+  }
 
   Widget newNoteButton() => ElevatedButton.icon(
       onPressed: () async {
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const NewNotes()));
       },
+      style: ButtonStyle(
+        padding: MaterialStateProperty.all(const EdgeInsets.all(10)),
+      ),
       icon: const Icon(Icons.fiber_new),
-      label: const Text('New Note'));
+      label: const Text(
+        'New Note',
+        style: TextStyle(fontSize: 25),
+      ));
 
   Widget encryptFileButton() => ElevatedButton.icon(
         onPressed: () {

@@ -287,6 +287,9 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
       } catch (e) {
         showDialog(
             context: context, builder: (_) => decryptionError(e.toString()));
+        setState(() {
+          _isLoading = false;
+        });
         return;
       }
       setState(() {

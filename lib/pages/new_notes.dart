@@ -338,6 +338,19 @@ class _NewNotesState extends State<NewNotes> {
         expands: true);
     final toolBar = QuillToolbar.basic(
       controller: _controller!,
+      showCameraButton: false,
+      showImageButton: false,
+      showVideoButton: false,
+      showLeftAlignment: false,
+      showRightAlignment: false,
+      showHeaderStyle: false,
+      showColorButton: false,
+      showIndent: false,
+      showCodeBlock: false,
+      showClearFormat: false,
+      showBackgroundColorButton: false,
+      showInlineCode: false,
+      showQuote: false,
 
       /// Intentionally Don't provide
       // onImagePickCallback: _onImagePickCallBack,
