@@ -27,7 +27,9 @@ class NotesHelper {
         .createSync(recursive: true);
     Directory(storageDirectory.path + '/${_help.assetFolderName}')
         .createSync(recursive: true);
-    final oldConfigFilePath = inputDirPath! + '/' + _help.configFileName;
+    final dirToUse =
+        (inputDirPath == null) ? storageDirectory.path : inputDirPath;
+    final oldConfigFilePath = dirToUse + '/' + _help.configFileName;
     final oldConfigFile = File(oldConfigFilePath);
     if (isNew != null) {
       final newConfigFilePath =
@@ -37,7 +39,7 @@ class NotesHelper {
           copyFiles,
           EncryptedDirObject(
               pickedFiles: [],
-              copyFiles: Directory(inputDirPath + '/${_help.fileFolderName}')
+              copyFiles: Directory(inputDirPath! + '/${_help.fileFolderName}')
                   .listSync(),
               assetFolderPath: getAssetFolderPath(),
               fileFolderPath: getFileFolderPath(),

@@ -47,34 +47,46 @@ class _NewNotesState extends State<NewNotes> {
   Widget build(BuildContext context) {
     return (_controller == null || _isLoading)
         ? _loadingScreen()
-        : Scaffold(
-            appBar: _getAppBar(),
-            body: Column(
-              children: [
-                _buildEditPage(),
-                const SizedBox(
-                  height: 5,
-                ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: attachments.length,
-                  itemBuilder: (context, index) {
-                    return Dismissible(
-                        key: Key(attachments[index].path),
-                        onDismissed: (DismissDirection direction) async {
-                          setState(() {
-                            attachments.removeAt(index);
-                          });
-                          final newNotesHelper = NotesHelper(
-                              tempDirectory: (await getTemporaryDirectory()),
-                              resultName: title);
-                          newNotesHelper
-                              .removeAsset([File(attachments[index].path)]);
-                        },
-                        child: _containerForAttachment(attachments[index]));
-                  },
-                ),
-              ],
+        : WillPopScope(
+            onWillPop: () async {
+              await _saveSteps();
+              await encrypt().then((resultEncryptedFile) async {
+                final params = SaveFileDialogParams(
+                    sourceFilePath: resultEncryptedFile.path);
+                final filePath =
+                    await FlutterFileDialog.saveFile(params: params);
+              });
+              return true;
+            },
+            child: Scaffold(
+              appBar: _getAppBar(),
+              body: Column(
+                children: [
+                  _buildEditPage(),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: attachments.length,
+                    itemBuilder: (context, index) {
+                      return Dismissible(
+                          key: Key(attachments[index].path),
+                          onDismissed: (DismissDirection direction) async {
+                            setState(() {
+                              attachments.removeAt(index);
+                            });
+                            final newNotesHelper = NotesHelper(
+                                tempDirectory: (await getTemporaryDirectory()),
+                                resultName: title);
+                            newNotesHelper
+                                .removeAsset([File(attachments[index].path)]);
+                          },
+                          child: _containerForAttachment(attachments[index]));
+                    },
+                  ),
+                ],
+              ),
             ),
           );
   }
@@ -351,6 +363,20 @@ class _NewNotesState extends State<NewNotes> {
       showBackgroundColorButton: false,
       showInlineCode: false,
       showQuote: false,
+      showBoldButton: false,
+      showItalicButton: false,
+      showListCheck: false,
+      showAlignmentButtons: false,
+      showStrikeThrough: false,
+      showCenterAlignment: false,
+      showDividers: false,
+      showDirection: false,
+      showLink: false,
+      showListBullets: false,
+      showListNumbers: false,
+      showUnderLineButton: false,
+      showJustifyAlignment: false,
+      showSmallButton: false,
 
       /// Intentionally Don't provide
       // onImagePickCallback: _onImagePickCallBack,
