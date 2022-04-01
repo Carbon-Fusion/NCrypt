@@ -232,7 +232,7 @@ class _NewNotesState extends State<NewNotes> {
           _saveSteps();
           encrypt().then((value) => Share.shareFiles([value.path]));
         },
-        icon: const Icon(Icons.share_rounded));
+        icon: const Icon(Icons.lock));
   }
 
   Widget saveButton() {
