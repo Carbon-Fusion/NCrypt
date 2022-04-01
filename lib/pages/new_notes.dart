@@ -47,46 +47,34 @@ class _NewNotesState extends State<NewNotes> {
   Widget build(BuildContext context) {
     return (_controller == null || _isLoading)
         ? _loadingScreen()
-        : WillPopScope(
-            onWillPop: () async {
-              await _saveSteps();
-              await encrypt().then((resultEncryptedFile) async {
-                final params = SaveFileDialogParams(
-                    sourceFilePath: resultEncryptedFile.path);
-                final filePath =
-                    await FlutterFileDialog.saveFile(params: params);
-              });
-              return true;
-            },
-            child: Scaffold(
-              appBar: _getAppBar(),
-              body: Column(
-                children: [
-                  _buildEditPage(),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: attachments.length,
-                    itemBuilder: (context, index) {
-                      return Dismissible(
-                          key: Key(attachments[index].path),
-                          onDismissed: (DismissDirection direction) async {
-                            setState(() {
-                              attachments.removeAt(index);
-                            });
-                            final newNotesHelper = NotesHelper(
-                                tempDirectory: (await getTemporaryDirectory()),
-                                resultName: title);
-                            newNotesHelper
-                                .removeAsset([File(attachments[index].path)]);
-                          },
-                          child: _containerForAttachment(attachments[index]));
-                    },
-                  ),
-                ],
-              ),
+        : Scaffold(
+            appBar: _getAppBar(),
+            body: Column(
+              children: [
+                _buildEditPage(),
+                const SizedBox(
+                  height: 5,
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: attachments.length,
+                  itemBuilder: (context, index) {
+                    return Dismissible(
+                        key: Key(attachments[index].path),
+                        onDismissed: (DismissDirection direction) async {
+                          setState(() {
+                            attachments.removeAt(index);
+                          });
+                          final newNotesHelper = NotesHelper(
+                              tempDirectory: (await getTemporaryDirectory()),
+                              resultName: title);
+                          newNotesHelper
+                              .removeAsset([File(attachments[index].path)]);
+                        },
+                        child: _containerForAttachment(attachments[index]));
+                  },
+                ),
+              ],
             ),
           );
   }
@@ -169,8 +157,11 @@ class _NewNotesState extends State<NewNotes> {
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter password';
+              } else if (!validatePass(value)) {
+                return 'Please use 1 Upper Case\n 5 Lower case \n 2 Symbols \n 2 Numbers\n';
+              } else {
+                return null;
               }
-              return null;
             },
           ),
           ElevatedButton(
@@ -178,8 +169,8 @@ class _NewNotesState extends State<NewNotes> {
                 setState(() {
                   if (_passwordFormKey.currentState!.validate()) {
                     password = passwordFieldController.text;
+                    Navigator.of(context).pop();
                   }
-                  Navigator.of(context).pop();
                 });
               },
               child: const FlutterText.Text('Set!'))
@@ -265,6 +256,13 @@ class _NewNotesState extends State<NewNotes> {
     if (password == null) {
       await showDialog(context: context, builder: (_) => setPasswordDialog());
     }
+  }
+
+  bool validatePass(String pass) {
+    String pattern =
+        r'^(?=.*?[A-Z])(?=.*?[a-z]{5,}.*)(?=.*?[0-9]{2,}.*)(?=.*?[!@#\$&*~]{2,}.*).{8,}$';
+    RegExp regExp = RegExp(pattern);
+    return regExp.hasMatch(pass);
   }
 
   Future<File> encrypt() async {
