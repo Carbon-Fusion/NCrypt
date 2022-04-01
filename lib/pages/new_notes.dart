@@ -238,9 +238,9 @@ class _NewNotesState extends State<NewNotes> {
 
   Widget shareButton() {
     return IconButton(
-        onPressed: () {
-          _saveSteps();
-          encrypt().then((value) => Share.shareFiles([value.path]));
+        onPressed: () async {
+          await _saveSteps();
+          await encrypt().then((value) => Share.shareFiles([value.path]));
         },
         icon: Icon(
           Icons.lock,
