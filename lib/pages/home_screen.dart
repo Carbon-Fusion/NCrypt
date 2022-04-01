@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
       alignment: Alignment.center,
       decoration: const BoxDecoration(
           image: DecorationImage(
-              image: AssetImage('assets/logo.webp'), fit: BoxFit.fill)),
+              image: AssetImage('assets/newlogo.png'), fit: BoxFit.fill)),
     );
   }
 
