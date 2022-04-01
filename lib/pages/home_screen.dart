@@ -17,15 +17,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   bool _shouldEncrypt = false;
+  final _useColor = const Color.fromRGBO(253, 253, 253, 1);
   final _help = MiscHelper();
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text(
-            "Encrypt!",
-            style: TextStyle(color: Colors.black),
+          title: Text(
+            "NCrypt!",
+            style: TextStyle(color: _useColor),
           ),
         ),
         body: _isLoading
@@ -57,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
       alignment: Alignment.center,
       decoration: const BoxDecoration(
           image: DecorationImage(
-              image: AssetImage('assets/newlogo.png'), fit: BoxFit.fill)),
+              image: AssetImage('assets/logo.webp'), fit: BoxFit.fill)),
     );
   }
 
@@ -69,10 +70,13 @@ class _HomeScreenState extends State<HomeScreen> {
       style: ButtonStyle(
         padding: MaterialStateProperty.all(const EdgeInsets.all(10)),
       ),
-      icon: const Icon(Icons.fiber_new),
-      label: const Text(
+      icon: Icon(
+        Icons.fiber_new,
+        color: _useColor,
+      ),
+      label: Text(
         'New Note',
-        style: TextStyle(fontSize: 25),
+        style: TextStyle(fontSize: 25, color: _useColor),
       ));
 
   Widget encryptFileButton() => ElevatedButton.icon(
@@ -104,8 +108,11 @@ class _HomeScreenState extends State<HomeScreen> {
       style: ButtonStyle(
         padding: MaterialStateProperty.all(const EdgeInsets.all(10)),
       ),
-      icon: const Icon(Icons.lock_open_rounded),
-      label: const Text('Decrypt', style: TextStyle(fontSize: 25)));
+      icon: Icon(
+        Icons.lock_open_rounded,
+        color: _useColor,
+      ),
+      label: Text('Decrypt', style: TextStyle(fontSize: 25, color: _useColor)));
 
   void encryptDecryptFile() async {
     try {

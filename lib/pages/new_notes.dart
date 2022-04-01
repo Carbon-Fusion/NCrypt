@@ -33,6 +33,7 @@ class _NewNotesState extends State<NewNotes> {
   String _newTitle = '...';
   String? password;
   late NotesHelper _notesHelper;
+  final _useColor = const Color.fromRGBO(253, 253, 253, 1);
   final _help = MiscHelper();
   final resultNameFieldController = TextEditingController();
   final _resultNameFormKey = GlobalKey<FormState>();
@@ -81,7 +82,10 @@ class _NewNotesState extends State<NewNotes> {
 
   PreferredSizeWidget _getAppBar() {
     return AppBar(
-      title: FlutterText.Text(title),
+      title: FlutterText.Text(
+        title,
+        style: TextStyle(color: _useColor),
+      ),
       actions: [
         shareButton(),
         renameButton(),
@@ -196,7 +200,10 @@ class _NewNotesState extends State<NewNotes> {
           showDialog(
               context: context, builder: (_) => changeResultNameDialog());
         },
-        icon: const Icon(Icons.drive_file_rename_outline_rounded));
+        icon: Icon(
+          Icons.drive_file_rename_outline_rounded,
+          color: _useColor,
+        ));
   }
 
   Widget attachAsset() {
@@ -223,7 +230,10 @@ class _NewNotesState extends State<NewNotes> {
             }
           });
         },
-        icon: const Icon(Icons.attach_file_rounded));
+        icon: Icon(
+          Icons.attach_file_rounded,
+          color: _useColor,
+        ));
   }
 
   Widget shareButton() {
@@ -232,7 +242,10 @@ class _NewNotesState extends State<NewNotes> {
           _saveSteps();
           encrypt().then((value) => Share.shareFiles([value.path]));
         },
-        icon: const Icon(Icons.lock));
+        icon: Icon(
+          Icons.lock,
+          color: _useColor,
+        ));
   }
 
   Widget saveButton() {
@@ -245,7 +258,10 @@ class _NewNotesState extends State<NewNotes> {
             final filePath = await FlutterFileDialog.saveFile(params: params);
           });
         },
-        icon: const Icon(Icons.save_rounded));
+        icon: Icon(
+          Icons.save_rounded,
+          color: _useColor,
+        ));
   }
 
   Future<void> _saveSteps() async {
