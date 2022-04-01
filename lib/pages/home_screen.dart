@@ -17,7 +17,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   bool _shouldEncrypt = false;
-  final _useColor = const Color.fromRGBO(253, 253, 253, 1);
   final _help = MiscHelper();
   @override
   Widget build(BuildContext context) {
@@ -26,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           title: Text(
             "NCrypt!",
-            style: TextStyle(color: _useColor),
+            style: TextStyle(color: useColor),
           ),
         ),
         body: _isLoading
@@ -69,14 +68,15 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       style: ButtonStyle(
         padding: MaterialStateProperty.all(const EdgeInsets.all(10)),
+        backgroundColor: MaterialStateProperty.all(buttonGrey),
       ),
-      icon: Icon(
+      icon: const Icon(
         Icons.fiber_new,
-        color: _useColor,
+        color: useColor,
       ),
-      label: Text(
+      label: const Text(
         'New Note',
-        style: TextStyle(fontSize: 25, color: _useColor),
+        style: TextStyle(fontSize: 25, color: useColor),
       ));
 
   Widget encryptFileButton() => ElevatedButton.icon(
@@ -107,12 +107,14 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       style: ButtonStyle(
         padding: MaterialStateProperty.all(const EdgeInsets.all(10)),
+        backgroundColor: MaterialStateProperty.all(buttonGrey),
       ),
-      icon: Icon(
+      icon: const Icon(
         Icons.lock_open_rounded,
-        color: _useColor,
+        color: useColor,
       ),
-      label: Text('Decrypt', style: TextStyle(fontSize: 25, color: _useColor)));
+      label: const Text('Decrypt',
+          style: TextStyle(fontSize: 25, color: useColor)));
 
   void encryptDecryptFile() async {
     try {

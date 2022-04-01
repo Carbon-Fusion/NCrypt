@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:encryptF/model/file_info.dart';
 import 'package:file_picker/file_picker.dart';
@@ -9,6 +10,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 final log = Logger('MiscHelper');
+const useColor = Color.fromRGBO(193, 193, 193, 1);
+const buttonGrey = Color.fromRGBO(48, 48, 48, 1);
+const buttonBlue = Color.fromRGBO(59, 90, 168, 1);
 
 class MiscHelper {
   final String jsonVersion = "0.0.1";
