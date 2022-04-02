@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:aes_crypt_null_safe/aes_crypt_null_safe.dart';
 import 'package:encryptF/helpers/compression_helper.dart';
@@ -326,9 +327,63 @@ class _NewNotesState extends State<NewNotes> {
         style: const TextStyle(color: Colors.white),
       ),
       onLongPress: () {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: FlutterText.Text(name)));
+        showDialog(
+            context: context,
+            builder: (_) => BackdropFilter(
+                  filter: ImageFilter.blur(),
+                  child: Dialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(22.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            height: 10,
+                            width: double.infinity,
+                          ),
+                          FlutterText.Text(
+                            name,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 20),
+                          ),
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          IntrinsicWidth(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ElevatedButton.icon(
+                                    onPressed: () {
+                                      Share.shareFiles([file.path]);
+                                    },
+                                    icon: const Icon(Icons.share_rounded),
+                                    label: const FlutterText.Text('Share')),
+                                const SizedBox(
+                                  height: 15,
+                                ),
+                                ElevatedButton.icon(
+                                    onPressed: () async {
+                                      final params = SaveFileDialogParams(
+                                          sourceFilePath: file.path);
+                                      final filePath =
+                                          await FlutterFileDialog.saveFile(
+                                              params: params);
+                                    },
+                                    icon: const Icon(Icons.download_rounded),
+                                    label: const FlutterText.Text('Download')),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ));
       },
     );
   }
@@ -421,8 +476,9 @@ class _NewNotesState extends State<NewNotes> {
   }
 
   Future<void> _loadAssets() async {
-    final assetFolder =
-        Directory(widget.note!.path + '/${_help.assetFolderName}');
+    final newNotesHelper = NotesHelper(
+        tempDirectory: (await getTemporaryDirectory()), resultName: title);
+    final assetFolder = Directory(newNotesHelper.getAssetFolderPath());
     if (assetFolder.existsSync()) {
       for (var entity in assetFolder.listSync()) {
         if (entity is File) {
@@ -459,24 +515,25 @@ class _NewNotesState extends State<NewNotes> {
         tempDirectory: (await getTemporaryDirectory()), resultName: title);
 
     if (widget.note != null) {
-      _notesHelper.setupNoteEncryptDir(
+      await _notesHelper.setupNoteEncryptDir(
           isNew: true, inputDirPath: widget.note!.path);
     } else {
-      _notesHelper.setupNoteEncryptDir();
+      await _notesHelper.setupNoteEncryptDir();
     }
     setState(() {
       _controller = QuillController(
           document: newDoc,
           selection: const TextSelection.collapsed(offset: 0));
     });
+
+    if (widget.note != null) {
+      _loadAssets();
+    }
   }
 
   @override
   void initState() {
     super.initState();
     _loadPage();
-    if (widget.note != null) {
-      _loadAssets();
-    }
   }
 }
