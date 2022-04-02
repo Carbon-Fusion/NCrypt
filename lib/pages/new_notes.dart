@@ -115,6 +115,8 @@ class _NewNotesState extends State<NewNotes> {
               }
               return null;
             },
+            autofocus: true,
+            autocorrect: false,
           ),
           ElevatedButton(
               onPressed: () async {
@@ -168,6 +170,8 @@ class _NewNotesState extends State<NewNotes> {
                 return null;
               }
             },
+            autofocus: true,
+            autocorrect: false,
           ),
           ElevatedButton(
               onPressed: () {

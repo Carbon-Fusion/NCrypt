@@ -416,6 +416,8 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
                 }
                 return null;
               },
+              autofocus: true,
+              autocorrect: false,
             ),
           ),
           const SizedBox(
