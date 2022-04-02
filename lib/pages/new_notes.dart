@@ -440,6 +440,7 @@ class _NewNotesState extends State<NewNotes> {
         focusNode: _focusNode,
         scrollController: ScrollController(),
         scrollable: true,
+        placeholder: "Enter Notes",
         padding: EdgeInsets.zero,
         autoFocus: true,
         readOnly: false,
@@ -518,7 +519,7 @@ class _NewNotesState extends State<NewNotes> {
   }
 
   Future<void> _loadPage() async {
-    var newDoc = Document()..insert(0, 'Empty');
+    var newDoc = Document()..insert(0, '');
 
     if (widget.note != null) {
       final configFile = File(widget.note!.path + '/${_help.configFileName}');
