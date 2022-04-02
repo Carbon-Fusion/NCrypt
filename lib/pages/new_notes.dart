@@ -115,6 +115,19 @@ class _NewNotesState extends State<NewNotes> {
               }
               return null;
             },
+            onFieldSubmitted: (val) {
+              setState(() {
+                if (_resultNameFormKey.currentState!.validate()) {
+                  _newTitle = resultNameFieldController.text;
+                } else {
+                  return;
+                }
+                _isLoading = true;
+                _currStatus = 'Renaming!';
+              });
+              Navigator.of(context).pop();
+              _noteRenameCall();
+            },
             autofocus: true,
             autocorrect: false,
           ),
@@ -130,22 +143,24 @@ class _NewNotesState extends State<NewNotes> {
                   _currStatus = 'Renaming!';
                 });
                 Navigator.of(context).pop();
-                NotesHelper(
-                        tempDirectory: (await getTemporaryDirectory()),
-                        resultName: title)
-                    .renameNote(
-                        RenameObject(oldName: title, newName: _newTitle))
-                    .then((value) {
-                  setState(() {
-                    title = _newTitle;
-                    _isLoading = false;
-                  });
-                });
+                _noteRenameCall();
               },
               child: const FlutterText.Text('Change Name'))
         ],
       ),
     );
+  }
+
+  void _noteRenameCall() async {
+    NotesHelper(
+            tempDirectory: (await getTemporaryDirectory()), resultName: title)
+        .renameNote(RenameObject(oldName: title, newName: _newTitle))
+        .then((value) {
+      setState(() {
+        title = _newTitle;
+        _isLoading = false;
+      });
+    });
   }
 
   Widget setPasswordField() {
@@ -172,6 +187,14 @@ class _NewNotesState extends State<NewNotes> {
             },
             autofocus: true,
             autocorrect: false,
+            onFieldSubmitted: (val) {
+              setState(() {
+                if (_passwordFormKey.currentState!.validate()) {
+                  password = passwordFieldController.text;
+                  Navigator.of(context).pop();
+                }
+              });
+            },
           ),
           ElevatedButton(
               onPressed: () {

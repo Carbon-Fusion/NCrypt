@@ -416,6 +416,11 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
                 }
                 return null;
               },
+              onFieldSubmitted: (val) {
+                setState(() {
+                  _passwordFieldSubmitter();
+                });
+              },
               autofocus: true,
               autocorrect: false,
             ),
@@ -446,12 +451,8 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
 
   Widget submitPasswordButton() {
     return ElevatedButton(
-      onPressed: () async {
-        if (_passwordFormKey.currentState!.validate()) {
-          passwordToBeSet = passwordFieldController.text;
-          WidgetsFlutterBinding.ensureInitialized();
-          encryptionDecryptionHandler();
-        }
+      onPressed: () {
+        _passwordFieldSubmitter();
       },
       child: widget.shouldEncrypt
           ? const Text(
@@ -463,5 +464,13 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
               style: TextStyle(fontSize: 15),
             ),
     );
+  }
+
+  void _passwordFieldSubmitter() {
+    if (_passwordFormKey.currentState!.validate()) {
+      passwordToBeSet = passwordFieldController.text;
+      WidgetsFlutterBinding.ensureInitialized();
+      encryptionDecryptionHandler();
+    }
   }
 }
