@@ -1,10 +1,13 @@
 import 'package:encryptF/model/theme_data.dart';
 import 'package:encryptF/pages/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  SystemChrome.setPreferredOrientations(
+          [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown])
+      .then((value) => runApp(const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
