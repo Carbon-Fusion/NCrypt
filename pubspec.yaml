@@ -51,6 +51,7 @@ dependencies:
       url: https://github.com/singerdmx/flutter-quill.git
       ref: master
   flutter_file_dialog: ^2.3.0
+  flutter_native_splash: ^2.1.2+1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -104,3 +105,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+flutter_native_splash :
+  color : "#212121"
+  image: "assets/play_store_512-modified.png"
+  android: true
