@@ -53,7 +53,7 @@ class _FileEncryptPageState extends State<FileEncryptPage> {
   Widget build(BuildContext context) {
     return GestureDetector(
         child: Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(widget.pickedFile.files.first.name),
       ),

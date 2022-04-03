@@ -38,6 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(child: Container()),
                   logo(),
+                  const SizedBox(
+                    height: 20,
+                  ),
                   newNoteButton(),
                   const SizedBox(
                     height: 20,
@@ -57,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
       alignment: Alignment.center,
       decoration: const BoxDecoration(
           image: DecorationImage(
-              image: AssetImage('assets/logo.webp'), fit: BoxFit.fill)),
+              image: AssetImage('assets/1024-modified.png'), fit: BoxFit.fill)),
     );
   }
 
