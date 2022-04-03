@@ -108,5 +108,5 @@ flutter:
 
 flutter_native_splash :
   color : "#212121"
-  image: "assets/play_store_512-modified.png"
+  image: "assets/ic_launcher-playstore-modified.png"
   android: true

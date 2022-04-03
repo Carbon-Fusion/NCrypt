@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
+          title: const Text(
             "NCrypt!",
             style: TextStyle(color: useColor),
           ),
@@ -60,7 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
       alignment: Alignment.center,
       decoration: const BoxDecoration(
           image: DecorationImage(
-              image: AssetImage('assets/1024-modified.png'), fit: BoxFit.fill)),
+              image: AssetImage('assets/ic_launcher-playstore-modified.png'),
+              fit: BoxFit.fill)),
     );
   }
 
