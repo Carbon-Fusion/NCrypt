@@ -45,15 +45,17 @@ class NotesHelper {
               fileFolderPath: getFileFolderPath(),
               isAsset: false));
       // copy assets
-      await compute(
-          copyFiles,
-          EncryptedDirObject(
-              pickedFiles: [],
-              copyFiles: Directory(inputDirPath + '/${_help.assetFolderName}')
-                  .listSync(),
-              assetFolderPath: getAssetFolderPath(),
-              fileFolderPath: getFileFolderPath(),
-              isAsset: true));
+      if (Directory(inputDirPath + '/${_help.assetFolderName}').existsSync()) {
+        await compute(
+            copyFiles,
+            EncryptedDirObject(
+                pickedFiles: [],
+                copyFiles: Directory(inputDirPath + '/${_help.assetFolderName}')
+                    .listSync(),
+                assetFolderPath: getAssetFolderPath(),
+                fileFolderPath: getFileFolderPath(),
+                isAsset: true));
+      }
       // copy configFile
       oldConfigFile.copySync(newConfigFilePath);
     } else {
