@@ -67,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget newNoteButton() => ElevatedButton.icon(
       onPressed: () async {
+        await FilePicker.platform.clearTemporaryFiles();
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const NewNotes()));
       },
@@ -121,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontSize: 25, color: useColor)));
 
   void encryptDecryptFile() async {
+    await FilePicker.platform.clearTemporaryFiles();
     try {
       final pickedFile =
           await FilePicker.platform.pickFiles(allowMultiple: true);

@@ -35,7 +35,7 @@ class NotesHelper {
       final newConfigFilePath =
           storageDirectory.path + '/${_help.configFileName}';
       // copy fileFolder
-      compute(
+      await compute(
           copyFiles,
           EncryptedDirObject(
               pickedFiles: [],
