@@ -15,7 +15,7 @@ const buttonGrey = Color.fromRGBO(48, 48, 48, 1);
 const buttonBlue = Color.fromRGBO(59, 90, 168, 1);
 
 class MiscHelper {
-  final String jsonVersion = "0.0.1";
+  final String jsonVersion = "1.0.1";
   final String configFileName = ".devutNCrypt";
   final String assetFolderName = 'assets';
   final String fileFolderName = 'files';
