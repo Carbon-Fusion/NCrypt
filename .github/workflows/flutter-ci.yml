@@ -29,9 +29,6 @@ jobs:
           touch "${TMP_KEYSTORE_FILE_PATH}"/key.jks
           echo $ENCODED_STRING | base64 -di > "${TMP_KEYSTORE_FILE_PATH}"/key.jks
           echo "${TMP_KEYSTORE_FILE_PATH}"
-      - run: ls
-      - run: ls android
-      - run: ls android/app/
       # Setup the flutter environment.
       - uses:  subosito/flutter-action@v2
         with:
