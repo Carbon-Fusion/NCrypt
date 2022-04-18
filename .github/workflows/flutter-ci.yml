@@ -19,8 +19,8 @@ jobs:
         env:
           ENCODED_STRING: ${{ secrets.KEYSTORE }}
         run: |
-          TMP_KEYSTORE_FILE_PATH="${RUNNER_TEMP}"/app/keystore
-          mkdir -p "${TMP_KEYSTORE_FILE_PATH}"
+          TMP_KEYSTORE_FILE_PATH="${RUNNER_TEMP}"/app/keystore && \
+          mkdir -p "${TMP_KEYSTORE_FILE_PATH}" && \
           echo $ENCODED_STRING | base64 -di > "${TMP_KEYSTORE_FILE_PATH}"/key.jks
       # Setup Java environment in order to build the Android app.
       - uses: actions/checkout@v1
