@@ -447,9 +447,6 @@ class _NewNotesState extends State<NewNotes> {
         expands: true);
     final toolBar = QuillToolbar.basic(
       controller: _controller!,
-      showCameraButton: false,
-      showImageButton: false,
-      showVideoButton: false,
       showLeftAlignment: false,
       showRightAlignment: false,
       showHeaderStyle: false,
