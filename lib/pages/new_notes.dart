@@ -180,7 +180,7 @@ class _NewNotesState extends State<NewNotes> {
               if (value == null || value.isEmpty) {
                 return 'Please enter password';
               } else if (!validatePass(value)) {
-                return 'Please use\n 2 Upper Case\n 2 Lower case \n 2 Symbols \n 2 Numbers\n';
+                return '';
               } else {
                 return null;
               }
@@ -196,6 +196,11 @@ class _NewNotesState extends State<NewNotes> {
               });
             },
           ),
+          const FlutterText.Text('Please Use'),
+          const FlutterText.Text('2 UpperCase'),
+          const FlutterText.Text('2 LowerCase'),
+          const FlutterText.Text('2 Digits'),
+          const FlutterText.Text('2 Symbols'),
           ElevatedButton(
               onPressed: () {
                 setState(() {
