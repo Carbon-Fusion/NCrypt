@@ -303,10 +303,36 @@ class _NewNotesState extends State<NewNotes> {
   }
 
   bool validatePass(String pass) {
-    String pattern =
-        r'^(?=.*?[A-Z])(?=.*?[a-z]{5,}.*)(?=.*?[0-9]{2,}.*)(?=.*?[!@#\$&*~]{2,}.*).{8,}$';
-    RegExp regExp = RegExp(pattern);
-    return regExp.hasMatch(pass);
+    var smallLetter = 0, bigLetter =0, symbols = 0, digit=0;
+    if(pass.length < 8) {
+      return false;
+    }
+
+    bool isUpperCase(String str) => str == str.toUpperCase();
+    bool isLowerCase(String str) => str == str.toLowerCase();
+    bool isDigit(String s, int idx) => (s.codeUnitAt(idx) ^ 0x30) <= 9;
+    final regExp = RegExp(
+        r'[\^$*.\[\]{}()?\-"!@#%&/\,><:;_~`+='
+        "'"
+            ']'
+    );
+    bool isSpecialSymbol(String str) => str.contains(regExp);
+    for(var i=0; i<pass.length;i++){
+      if(isSpecialSymbol(pass[i])){
+        symbols++;
+      }else if(isDigit(pass,i)){
+        digit++;
+      }else if(isUpperCase(pass[i])){
+        bigLetter++;
+      }else if(isLowerCase(pass[i])){
+        smallLetter++;
+      }
+    }
+
+    if(symbols>=2 && digit>=2 && bigLetter>=2 && smallLetter >= 2){
+      return true;
+    }
+    return false;
   }
 
   Future<File> encrypt() async {
