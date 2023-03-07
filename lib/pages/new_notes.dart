@@ -180,7 +180,7 @@ class _NewNotesState extends State<NewNotes> {
               if (value == null || value.isEmpty) {
                 return 'Please enter password';
               } else if (!validatePass(value)) {
-                return 'Please use 1 Upper Case\n 5 Lower case \n 2 Symbols \n 2 Numbers\n';
+                return 'Please use\n 2 Upper Case\n 2 Lower case \n 2 Symbols \n 2 Numbers\n';
               } else {
                 return null;
               }
