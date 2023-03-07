@@ -50,7 +50,7 @@ dependencies:
     git:
       url: https://github.com/singerdmx/flutter-quill.git
       ref: master
-  flutter_file_dialog: ^2.3.0
+  flutter_file_dialog: ^3.0.0
   flutter_native_splash: ^2.1.2+1
 dev_dependencies:
   build_runner: ^2.0.0
